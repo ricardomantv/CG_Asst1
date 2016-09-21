@@ -1,0 +1,8 @@
+/Users/ricardo/Documents/school/junior/fall/computer graphics/asst1_drawsvg/build/CMakeFiles/rebuild_cache.dir
+/Users/ricardo/Documents/school/junior/fall/computer graphics/asst1_drawsvg/build/CMakeFiles/list_install_components.dir
+/Users/ricardo/Documents/school/junior/fall/computer graphics/asst1_drawsvg/build/CMakeFiles/install/local.dir
+/Users/ricardo/Documents/school/junior/fall/computer graphics/asst1_drawsvg/build/CMakeFiles/install.dir
+/Users/ricardo/Documents/school/junior/fall/computer graphics/asst1_drawsvg/build/CMakeFiles/install/strip.dir
+/Users/ricardo/Documents/school/junior/fall/computer graphics/asst1_drawsvg/build/CMakeFiles/edit_cache.dir
+/Users/ricardo/Documents/school/junior/fall/computer graphics/asst1_drawsvg/build/CMakeFiles/drawsvg.dir
+/Users/ricardo/Documents/school/junior/fall/computer graphics/asst1_drawsvg/build/CMakeFiles/drawsvg_hdwr.dir

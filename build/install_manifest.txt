@@ -1,0 +1,2 @@
+/Users/ricardo/Documents/school/junior/fall/computer graphics/asst1_drawsvg/src/hardware/libdrawsvghdwr_osx.a
+/Users/ricardo/Documents/school/junior/fall/computer graphics/asst1_drawsvg/src/.././drawsvg
