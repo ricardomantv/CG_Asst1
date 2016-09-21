@@ -309,15 +309,62 @@ void SoftwareRendererImp::rasterize_line( float x0, float y0,
     }
   }
 }
+/*
+float SoftwareRendererImp::sign( float x, float y,
+                                 float x0, float y0,
+                                 float x1, float y1 ) {
 
+  return (x - x1) * (y0 - y1) - (x0 - x1) * (y - y1);
+}
+
+bool SoftwareRendererImp::in_triangle( float x, float y,
+                                      float x0, float y0,
+                                      float x1, float y1,
+                                      float x2, float y2 ) {
+
+  bool b0 = sign(x, y, x0, y0, x1, y1) < 0.0f;
+  bool b1 = sign(x, y, x1, y1, x2, y2) < 0.0f;
+  bool b2 = sign(x, y, x2, y2, x0, y0) < 0.0f;
+  return ((b0 == b1) && (b1 == b2));
+}
+*/
 void SoftwareRendererImp::rasterize_triangle( float x0, float y0,
                                               float x1, float y1,
                                               float x2, float y2,
                                               Color color ) {
   // Task 3:
   // Implement triangle rasterization
-  
 
+  //Draw edges of triangle
+  rasterize_line(x0, y0, x1, y1, color);
+  rasterize_line(x1, y1, x2, y2, color);
+  rasterize_line(x2, y2, x0, y0, color);
+
+  //Fill in triangle
+  float low_x = (x0 < x1) ? ((x0 < x2) ? x0 : x2) : ((x1 < x2) ? x1 : x2);
+  float low_y = (y0 < y1) ? ((y0 < y2) ? y0 : y2) : ((y1 < y2) ? y1 : y2);
+  float hi_x = (x0 > x1) ? ((x0 > x2) ? x0 : x2) : ((x1 > x2) ? x1 : x2);
+  float hi_y = (y0 > y1) ? ((y0 > y2) ? y0 : y2) : ((y1 > y2) ? y1 : y2);
+
+  float x, y;
+  for(x = low_x; x < hi_x; x++) {
+    for(y = low_y; y < hi_y; y++) {
+      /*
+        Check (p, p0, p1)
+              (p, p1, p2)
+              (p, p2, p0)
+              return (x - x1) * (y0 - y1) - (x0 - x1) * (y - y1);
+      */
+
+      bool b0 = ((x - x1) * (y0 - y1) - (x0 - x1) * (y - y1)) < 0.0f;
+      bool b1 = ((x - x2) * (y1 - y2) - (x1 - x2) * (y - y2)) < 0.0f;
+      bool b2 = ((x - x0) * (y2 - y0) - (x2 - x0) * (y - y0)) < 0.0f;
+
+      if((b0 == b1) && (b1 == b2)) {
+        rasterize_point(x, y, color);
+      }
+    }
+  }
 }
 
 void SoftwareRendererImp::rasterize_image( float x0, float y0,
