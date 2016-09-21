@@ -347,8 +347,8 @@ void SoftwareRendererImp::rasterize_triangle( float x0, float y0,
   float hi_y = (y0 > y1) ? ((y0 > y2) ? y0 : y2) : ((y1 > y2) ? y1 : y2);
 
   float x, y;
-  for(x = low_x; x < hi_x; x++) {
-    for(y = low_y; y < hi_y; y++) {
+  for(x = low_x; x < hi_x; x += 0.5) {
+    for(y = low_y; y < hi_y; y += 0.5) {
       /*
         Check (p, p0, p1)
               (p, p1, p2)
