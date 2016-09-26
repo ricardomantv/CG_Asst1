@@ -64,6 +64,9 @@ void SoftwareRendererImp::draw_element( SVGElement* element ) {
   // Task 5 (part 1):
   // Modify this to implement the transformation stack
 
+  Matrix3x3 temp_trans = transformation;
+  transformation = transformation * (element->transform);
+
   switch(element->type) {
     case POINT:
       draw_point(static_cast<Point&>(*element));
@@ -92,7 +95,7 @@ void SoftwareRendererImp::draw_element( SVGElement* element ) {
     default:
       break;
   }
-
+  transformation = temp_trans;
 }
 
 
@@ -309,25 +312,7 @@ void SoftwareRendererImp::rasterize_line( float x0, float y0,
     }
   }
 }
-/*
-float SoftwareRendererImp::sign( float x, float y,
-                                 float x0, float y0,
-                                 float x1, float y1 ) {
 
-  return (x - x1) * (y0 - y1) - (x0 - x1) * (y - y1);
-}
-
-bool SoftwareRendererImp::in_triangle( float x, float y,
-                                      float x0, float y0,
-                                      float x1, float y1,
-                                      float x2, float y2 ) {
-
-  bool b0 = sign(x, y, x0, y0, x1, y1) < 0.0f;
-  bool b1 = sign(x, y, x1, y1, x2, y2) < 0.0f;
-  bool b2 = sign(x, y, x2, y2, x0, y0) < 0.0f;
-  return ((b0 == b1) && (b1 == b2));
-}
-*/
 void SoftwareRendererImp::rasterize_triangle( float x0, float y0,
                                               float x1, float y1,
                                               float x2, float y2,
@@ -349,12 +334,6 @@ void SoftwareRendererImp::rasterize_triangle( float x0, float y0,
   float x, y;
   for(x = low_x; x < hi_x; x += 0.5) {
     for(y = low_y; y < hi_y; y += 0.5) {
-      /*
-        Check (p, p0, p1)
-              (p, p1, p2)
-              (p, p2, p0)
-              return (x - x1) * (y0 - y1) - (x0 - x1) * (y - y1);
-      */
 
       bool b0 = ((x - x1) * (y0 - y1) - (x0 - x1) * (y - y1)) < 0.0f;
       bool b1 = ((x - x2) * (y1 - y2) - (x1 - x2) * (y - y2)) < 0.0f;
