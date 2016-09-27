@@ -234,11 +234,29 @@ void SoftwareRendererImp::rasterize_point( float x, float y, Color color ) {
   if ( sy < 0 || sy >= target_h ) return;
 
   // fill sample - NOT doing alpha blending!
+  /*
   render_target[4 * (sx + sy * target_w)    ] = (uint8_t) (color.r * 255);
   render_target[4 * (sx + sy * target_w) + 1] = (uint8_t) (color.g * 255);
   render_target[4 * (sx + sy * target_w) + 2] = (uint8_t) (color.b * 255);
   render_target[4 * (sx + sy * target_w) + 3] = (uint8_t) (color.a * 255);
+  */
 
+  float Er = color.r, Eg = color.g, Eb = color.b;
+  float Ea = color.a;
+  float Cr = (float)(render_target[4 * (sx + sy * target_w)    ] / 255);
+  float Cg = (float)(render_target[4 * (sx + sy * target_w) + 1] / 255);
+  float Cb = (float)(render_target[4 * (sx + sy * target_w) + 2] / 255);
+  float Ca = (float)(render_target[4 * (sx + sy * target_w) + 3] / 255);
+
+  float a = 1 - (1 - Ea) * (1 - Ca);
+  float r = (1 - Ea) * Cr + Er;
+  float g = (1 - Ea) * Cg + Eg;
+  float b = (1 - Ea) * Cb + Eb;
+
+  render_target[4 * (sx + sy * target_w)    ] = (uint8_t) (r * 255);
+  render_target[4 * (sx + sy * target_w) + 1] = (uint8_t) (g * 255);
+  render_target[4 * (sx + sy * target_w) + 2] = (uint8_t) (b * 255);
+  render_target[4 * (sx + sy * target_w) + 3] = (uint8_t) (a * 255);
 }
 
 void SoftwareRendererImp::rasterize_line( float x0, float y0,
@@ -332,8 +350,8 @@ void SoftwareRendererImp::rasterize_triangle( float x0, float y0,
   float hi_y = (y0 > y1) ? ((y0 > y2) ? y0 : y2) : ((y1 > y2) ? y1 : y2);
 
   float x, y;
-  for(x = low_x; x < hi_x; x += 0.5) {
-    for(y = low_y; y < hi_y; y += 0.5) {
+  for(x = low_x; x < hi_x; x += 1) {
+    for(y = low_y; y < hi_y; y += 1) {
 
       bool b0 = ((x - x1) * (y0 - y1) - (x0 - x1) * (y - y1)) < 0.0f;
       bool b1 = ((x - x2) * (y1 - y2) - (x1 - x2) * (y - y2)) < 0.0f;
@@ -351,6 +369,21 @@ void SoftwareRendererImp::rasterize_image( float x0, float y0,
                                            Texture& tex ) {
   // Task 6:
   // Implement image rasterization
+
+  Sampler2D* sampler = this->sampler;
+
+  float x, y;
+  float u, v;
+  Color color;
+  for(x = x0; x < x1; x++) {
+    for(y = y0; y < y1; y++) {
+      u = (x - x0) / (x1 - x0);
+      v = (y - y0) / (y1 - y0);
+      //color = sampler->sample_nearest(tex, u, v, 0);
+      color = sampler->sample_bilinear(tex, u, v, 0);
+      rasterize_point(x, y, color);
+    }
+  }
 
 }
 
