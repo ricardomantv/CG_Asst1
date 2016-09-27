@@ -23,7 +23,7 @@ class SoftwareRenderer : public SVGRenderer {
 
   // Set sample rate
   virtual void set_sample_rate( size_t sample_rate ) = 0;
-  
+
   // Set render target
   virtual void set_render_target( unsigned char* render_target,
                                   size_t width, size_t height ) = 0;
@@ -49,7 +49,7 @@ class SoftwareRenderer : public SVGRenderer {
   size_t sample_rate;
 
   // Render target memory location
-  unsigned char* render_target; 
+  unsigned char* render_target;
 
   // Target buffer dimension (in pixels)
   size_t target_w; size_t target_h;
@@ -73,7 +73,7 @@ class SoftwareRendererImp : public SoftwareRenderer {
 
   // set sample rate
   void set_sample_rate( size_t sample_rate );
-  
+
   // set render target
   void set_render_target( unsigned char* target_buffer,
                           size_t width, size_t height );
@@ -133,6 +133,9 @@ class SoftwareRendererImp : public SoftwareRenderer {
   // resolve samples to render target
   void resolve( void );
 
+  // Helpers
+  std::vector<unsigned char> sample_buffer; int w; int h;
+
 }; // class SoftwareRendererImp
 
 
@@ -146,7 +149,7 @@ class SoftwareRendererRef : public SoftwareRenderer {
 
   // set sample rate
   void set_sample_rate( size_t sample_rate );
-  
+
   // set render target
   void set_render_target( unsigned char* target_buffer,
                           size_t width, size_t height );

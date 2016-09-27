@@ -197,6 +197,7 @@ Color Sampler2DImp::sample_trilinear(Texture& tex,
   // Task 7: Implement trilinear filtering
 
   // return magenta for invalid level
+  
   return Color(1,0,1,1);
 
 }

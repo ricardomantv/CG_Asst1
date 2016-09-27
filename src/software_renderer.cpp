@@ -57,6 +57,9 @@ void SoftwareRendererImp::set_render_target( unsigned char* render_target,
   this->target_w = width;
   this->target_h = height;
 
+  this->w = width * this->sample_rate;
+  this->h = height * this->sample_rate;
+  this->sample_buffer.resize(4 * this->w * this->h);
 }
 
 void SoftwareRendererImp::draw_element( SVGElement* element ) {
@@ -234,29 +237,30 @@ void SoftwareRendererImp::rasterize_point( float x, float y, Color color ) {
   if ( sy < 0 || sy >= target_h ) return;
 
   // fill sample - NOT doing alpha blending!
-  /*
-  render_target[4 * (sx + sy * target_w)    ] = (uint8_t) (color.r * 255);
-  render_target[4 * (sx + sy * target_w) + 1] = (uint8_t) (color.g * 255);
-  render_target[4 * (sx + sy * target_w) + 2] = (uint8_t) (color.b * 255);
-  render_target[4 * (sx + sy * target_w) + 3] = (uint8_t) (color.a * 255);
-  */
 
+  sample_buffer[4 * (sx + sy * target_w)    ] = (uint8_t) (color.r * 255);
+  sample_buffer[4 * (sx + sy * target_w) + 1] = (uint8_t) (color.g * 255);
+  sample_buffer[4 * (sx + sy * target_w) + 2] = (uint8_t) (color.b * 255);
+  sample_buffer[4 * (sx + sy * target_w) + 3] = (uint8_t) (color.a * 255);
+
+  /*
   float Er = color.r, Eg = color.g, Eb = color.b;
   float Ea = color.a;
-  float Cr = (float)(render_target[4 * (sx + sy * target_w)    ] / 255);
-  float Cg = (float)(render_target[4 * (sx + sy * target_w) + 1] / 255);
-  float Cb = (float)(render_target[4 * (sx + sy * target_w) + 2] / 255);
-  float Ca = (float)(render_target[4 * (sx + sy * target_w) + 3] / 255);
+  float Cr = (float)(sample_buffer[4 * (sx + sy * target_w)    ] / 255);
+  float Cg = (float)(sample_buffer[4 * (sx + sy * target_w) + 1] / 255);
+  float Cb = (float)(sample_buffer[4 * (sx + sy * target_w) + 2] / 255);
+  float Ca = (float)(sample_buffer[4 * (sx + sy * target_w) + 3] / 255);
 
   float a = 1 - (1 - Ea) * (1 - Ca);
   float r = (1 - Ea) * Cr + Er;
   float g = (1 - Ea) * Cg + Eg;
   float b = (1 - Ea) * Cb + Eb;
 
-  render_target[4 * (sx + sy * target_w)    ] = (uint8_t) (r * 255);
-  render_target[4 * (sx + sy * target_w) + 1] = (uint8_t) (g * 255);
-  render_target[4 * (sx + sy * target_w) + 2] = (uint8_t) (b * 255);
-  render_target[4 * (sx + sy * target_w) + 3] = (uint8_t) (a * 255);
+  sample_buffer[4 * (sx + sy * target_w)    ] = (uint8_t) (r * 255);
+  sample_buffer[4 * (sx + sy * target_w) + 1] = (uint8_t) (g * 255);
+  sample_buffer[4 * (sx + sy * target_w) + 2] = (uint8_t) (b * 255);
+  sample_buffer[4 * (sx + sy * target_w) + 3] = (uint8_t) (a * 255);
+  */
 }
 
 void SoftwareRendererImp::rasterize_line( float x0, float y0,
@@ -350,8 +354,8 @@ void SoftwareRendererImp::rasterize_triangle( float x0, float y0,
   float hi_y = (y0 > y1) ? ((y0 > y2) ? y0 : y2) : ((y1 > y2) ? y1 : y2);
 
   float x, y;
-  for(x = low_x; x < hi_x; x += 1) {
-    for(y = low_y; y < hi_y; y += 1) {
+  for(x = low_x; x < hi_x; x += 0.5) {
+    for(y = low_y; y < hi_y; y += 0.5) {
 
       bool b0 = ((x - x1) * (y0 - y1) - (x0 - x1) * (y - y1)) < 0.0f;
       bool b1 = ((x - x2) * (y1 - y2) - (x1 - x2) * (y - y2)) < 0.0f;
@@ -393,6 +397,36 @@ void SoftwareRendererImp::resolve( void ) {
   // Task 4:
   // Implement supersampling
   // You may also need to modify other functions marked with "Task 4".
+
+  int x, y;
+  int xbuf, ybuf;
+  int xsample, ysample;
+  int xidx, yidx;
+  float sum_r, sum_g, sum_b, sum_a;
+  for(x = 0; x < this->w; x += sample_rate) {
+    for(y = 0; y < this->h; y += sample_rate) {
+      sum_r = 0;
+      sum_g = 0;
+      sum_b = 0;
+      sum_a = 0;
+      for(xbuf = 0; xbuf < sample_rate; xbuf++) {
+        for(ybuf = 0; ybuf < sample_rate; ybuf++) {
+          xsample = x + xbuf;
+          ysample = y + ybuf;
+          sum_r += sample_buffer[4 * (xsample + (ysample * target_w))    ];
+          sum_g += sample_buffer[4 * (xsample + (ysample * target_w)) + 1];
+          sum_b += sample_buffer[4 * (xsample + (ysample * target_w)) + 2];
+          sum_a += sample_buffer[4 * (xsample + (ysample * target_w)) + 3];
+        }
+      }
+      xidx = floor(x / sample_rate);
+      yidx = floor(y / sample_rate);
+      render_target[4 * (xidx + yidx * target_w)    ] = sum_r / pow(sample_rate, 2);
+      render_target[4 * (xidx + yidx * target_w) + 1] = sum_g / pow(sample_rate, 2);
+      render_target[4 * (xidx + yidx * target_w) + 2] = sum_b / pow(sample_rate, 2);
+      render_target[4 * (xidx + yidx * target_w) + 3] = sum_a / pow(sample_rate, 2);
+    }
+  }
   return;
 
 }
