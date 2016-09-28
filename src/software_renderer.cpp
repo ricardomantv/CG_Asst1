@@ -378,13 +378,17 @@ void SoftwareRendererImp::rasterize_image( float x0, float y0,
 
   float x, y;
   float u, v;
+  float u_scale = 1 / ((x1 - x0) * sample_rate);
+  float v_scale = 1 / ((y1 - y0) * sample_rate);
   Color color;
   for(x = x0; x < x1; x++) {
     for(y = y0; y < y1; y++) {
-      u = (x - x0) / (x1 - x0);
+      u = (x - x0) / (y1 - y0);
       v = (y - y0) / (y1 - y0);
+
       //color = sampler->sample_nearest(tex, u, v, 0);
       color = sampler->sample_bilinear(tex, u, v, 0);
+      //color = sampler->sample_trilinear(tex, u, v, u_scale, v_scale);
       rasterize_point(x, y, color);
     }
   }

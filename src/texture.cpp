@@ -67,11 +67,24 @@ void Sampler2DImp::generate_mips(Texture& tex, int startLevel) {
   Color colors[3] = { Color(1,0,0,1), Color(0,1,0,1), Color(0,0,1,1) };
   for(size_t i = 1; i < tex.mipmap.size(); ++i) {
 
+    /*
     Color c = colors[i % 3];
     MipLevel& mip = tex.mipmap[i];
 
-    for(size_t i = 0; i < 4 * mip.width * mip.height; i += 4) {
+    for(size_t idx = 0; idx < 4 * mip.width * mip.height; idx += 4) {
       float_to_uint8( &mip.texels[i], &c.r );
+    }
+    */
+
+    for (size_t x = 0; x < tex.mipmap[i].width - 1; x++) {
+      for(size_t y = 0; y < tex.mipmap[i].height - 1; y++) {
+        Color c = sample_bilinear(tex, 2 * x, 2 * y, i - 1);
+
+        tex.mipmap[i].texels[4 * (x + y * tex.mipmap[i].width)    ] = c.r;
+        tex.mipmap[i].texels[4 * (x + y * tex.mipmap[i].width) + 1] = c.g;
+        tex.mipmap[i].texels[4 * (x + y * tex.mipmap[i].width) + 1] = c.b;
+        tex.mipmap[i].texels[4 * (x + y * tex.mipmap[i].width) + 1] = c.a;
+      }
     }
   }
 
@@ -82,8 +95,6 @@ Color Sampler2DImp::sample_nearest(Texture& tex,
                                    int level) {
 
   // Task 6: Implement nearest neighbour interpolation
-
-  if(level != 0) return Color(1, 0, 1, 1);
 
   int int_u = (int) floor(u * tex.mipmap[level].width);
   int int_v = (int) floor(v * tex.mipmap[level].height);
@@ -108,57 +119,13 @@ Color Sampler2DImp::sample_bilinear(Texture& tex,
                                     int level) {
 
   // Task 6: Implement bilinear filtering
+  //Get 4 nearest pixels in texture map and average
+  if(level < 0) {
+    level = 0;
+  }
 
-  // return magenta for invalid level
-  /*
   int int_u = (int) floor(u * tex.mipmap[level].width);
   int int_v = (int) floor(v * tex.mipmap[level].height);
-  float sum_r = 0, sum_g = 0, sum_b = 0, sum_a = 0, count = 0;
-
-  sum_r +=  (float)tex.mipmap[level].texels[4 * (int_u + int_v * tex.mipmap[level].width)    ];
-  sum_g +=  (float)tex.mipmap[level].texels[4 * (int_u + int_v * tex.mipmap[level].width) + 1];
-  sum_b +=  (float)tex.mipmap[level].texels[4 * (int_u + int_v * tex.mipmap[level].width) + 2];
-  sum_a +=  (float)tex.mipmap[level].texels[4 * (int_u + int_v * tex.mipmap[level].width) + 3];
-  count++;
-
-  //texel to left of u, v
-  if(0 <= int_u - 1) {
-    sum_r +=  (float)tex.mipmap[level].texels[4 * ((int_u - 1) + int_v * tex.mipmap[level].width)    ];
-    sum_g +=  (float)tex.mipmap[level].texels[4 * ((int_u - 1) + int_v * tex.mipmap[level].width) + 1];
-    sum_b +=  (float)tex.mipmap[level].texels[4 * ((int_u - 1) + int_v * tex.mipmap[level].width) + 2];
-    sum_a +=  (float)tex.mipmap[level].texels[4 * ((int_u - 1)+ int_v * tex.mipmap[level].width) + 3];
-    count++;
-  }
-
-  //texel above of u, v
-  if(0 <= int_v - 1) {
-    sum_r +=  (float)tex.mipmap[level].texels[4 * (int_u + (int_v - 1) * tex.mipmap[level].width)    ];
-    sum_g +=  (float)tex.mipmap[level].texels[4 * (int_u + (int_v - 1) * tex.mipmap[level].width) + 1];
-    sum_b +=  (float)tex.mipmap[level].texels[4 * (int_u + (int_v - 1) * tex.mipmap[level].width) + 2];
-    sum_a +=  (float)tex.mipmap[level].texels[4 * (int_u + (int_v - 1) * tex.mipmap[level].width) + 3];
-    count++;
-  }
-
-  //texel to right of u, v
-  if(int_u + 1 < tex.mipmap[level].width) {
-    sum_r +=  (float)tex.mipmap[level].texels[4 * ((int_u + 1) + int_v * tex.mipmap[level].width)    ];
-    sum_g +=  (float)tex.mipmap[level].texels[4 * ((int_u + 1) + int_v * tex.mipmap[level].width) + 1];
-    sum_b +=  (float)tex.mipmap[level].texels[4 * ((int_u + 1) + int_v * tex.mipmap[level].width) + 2];
-    sum_a +=  (float)tex.mipmap[level].texels[4 * ((int_u + 1) + int_v * tex.mipmap[level].width) + 3];
-    count++;
-  }
-
-  if(int_v + 1 < tex.mipmap[level].height) {
-    sum_r +=  (float)tex.mipmap[level].texels[4 * (int_u + (int_v + 1) * tex.mipmap[level].width)    ];
-    sum_g +=  (float)tex.mipmap[level].texels[4 * (int_u + (int_v + 1) * tex.mipmap[level].width) + 1];
-    sum_b +=  (float)tex.mipmap[level].texels[4 * (int_u + (int_v + 1) * tex.mipmap[level].width) + 2];
-    sum_a +=  (float)tex.mipmap[level].texels[4 * (int_u + (int_v + 1) * tex.mipmap[level].width) + 3];
-    count++;
-  }
-  */
-
-  int int_u = (int) floor(u * tex.mipmap[0].width);
-  int int_v = (int) floor(v * tex.mipmap[0].height);
 
   float r0 = (float)tex.mipmap[level].texels[4 * (int_u + int_v * tex.mipmap[level].width)    ];
   float g0 = (float)tex.mipmap[level].texels[4 * (int_u + int_v * tex.mipmap[level].width) + 1];
@@ -185,7 +152,6 @@ Color Sampler2DImp::sample_bilinear(Texture& tex,
   float blue = (b0 + b1 + b2 + b3) / (4 * 255);
   float alpha = (a0 + a1 + a2 + a3) / (4 * 255);
 
-  //Get 4 nearest pixels in texture map and average
   return Color(red, green, blue, alpha);
 
 }
@@ -196,9 +162,24 @@ Color Sampler2DImp::sample_trilinear(Texture& tex,
 
   // Task 7: Implement trilinear filtering
 
-  // return magenta for invalid level
-  
-  return Color(1,0,1,1);
+  float dudx = u * u_scale;
+  //cout<<"dudx = " << dudx << "\n";
+  float dvdy = v * v_scale;
+  //cout<<"dvdy = " << dvdy << "\n";
+  float maxd = (dvdy < dudx) ? dudx : dvdy;
+  int d = (int) log2(maxd);
+
+  cout << "d = " << d << "\n";
+
+  Color c0 = sample_bilinear(tex, dudx, dvdy, d);
+  Color c1 = sample_bilinear(tex, dudx, dvdy, d);
+
+  float red   = (c0.r + c1.r) / 2;
+  float green = (c0.r + c1.r) / 2;
+  float blue  = (c0.r + c1.r) / 2;
+  float alpha = (c0.r + c1.r) / 2;
+
+  return Color(red, green, blue, alpha);
 
 }
 
