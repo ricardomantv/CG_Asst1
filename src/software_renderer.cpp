@@ -237,13 +237,13 @@ void SoftwareRendererImp::rasterize_point( float x, float y, Color color ) {
   if ( sy < 0 || sy >= target_h ) return;
 
   // fill sample - NOT doing alpha blending!
-
+  /*
   sample_buffer[4 * (sx + sy * target_w)    ] = (uint8_t) (color.r * 255);
   sample_buffer[4 * (sx + sy * target_w) + 1] = (uint8_t) (color.g * 255);
   sample_buffer[4 * (sx + sy * target_w) + 2] = (uint8_t) (color.b * 255);
   sample_buffer[4 * (sx + sy * target_w) + 3] = (uint8_t) (color.a * 255);
-
-  /*
+  */
+  
   float Er = color.r, Eg = color.g, Eb = color.b;
   float Ea = color.a;
   float Cr = (float)(sample_buffer[4 * (sx + sy * target_w)    ] / 255);
@@ -260,7 +260,7 @@ void SoftwareRendererImp::rasterize_point( float x, float y, Color color ) {
   sample_buffer[4 * (sx + sy * target_w) + 1] = (uint8_t) (g * 255);
   sample_buffer[4 * (sx + sy * target_w) + 2] = (uint8_t) (b * 255);
   sample_buffer[4 * (sx + sy * target_w) + 3] = (uint8_t) (a * 255);
-  */
+
 }
 
 void SoftwareRendererImp::rasterize_line( float x0, float y0,
